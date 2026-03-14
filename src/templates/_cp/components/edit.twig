@@ -1,0 +1,113 @@
+{% extends '_layouts/cp.twig' %}
+
+{% set title = isNew ? 'New Component'|t('rabbits') : component.title %}
+
+{% set crumbs = [
+  { label: 'Rabbits'|t('rabbits'), url: cpUrl('rabbits') },
+  { label: 'Components'|t('rabbits'), url: cpUrl('rabbits/components') },
+] %}
+
+{% block content %}
+  <form method="post" accept-charset="UTF-8">
+    {{ csrfInput() }}
+    {{ actionInput('rabbits/components/save') }}
+    {{ redirectInput('rabbits/components/{id}') }}
+
+    {% if not isNew %}
+      {{ hiddenInput('componentId', component.id) }}
+    {% endif %}
+
+    <div id="fields">
+      <div class="field" id="title-field">
+        <div class="heading">
+          <label for="title">{{ 'Title'|t('app') }}</label>
+        </div>
+        <div class="input">
+          <input type="text" id="title" name="title" class="text fullwidth"
+                 value="{{ component.title }}" autofocus>
+        </div>
+        {% if component.getErrors('title') %}
+          <ul class="errors">
+            {% for error in component.getErrors('title') %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class="field" id="handle-field">
+        <div class="heading">
+          <label for="handle">{{ 'Handle'|t('rabbits') }}</label>
+        </div>
+        <div class="input">
+          <input type="text" id="handle" name="handle" class="text fullwidth code"
+                 value="{{ component.handle }}">
+        </div>
+        {% if component.getErrors('handle') %}
+          <ul class="errors">
+            {% for error in component.getErrors('handle') %}
+              <li>{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+
+      <div class="field" id="componentType-field">
+        <div class="heading">
+          <label for="componentType">{{ 'Type'|t('rabbits') }}</label>
+        </div>
+        <div class="input">
+          <div class="select">
+            <select id="componentType" name="componentType">
+              {% for type in componentTypes %}
+                <option value="{{ type.value }}" {{ component.componentType == type.value ? 'selected' }}>
+                  {{ type.label() }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" id="componentStatus-field">
+        <div class="heading">
+          <label for="componentStatus">{{ 'Status'|t('rabbits') }}</label>
+        </div>
+        <div class="input">
+          <div class="select">
+            <select id="componentStatus" name="componentStatus">
+              {% for status in componentStatuses %}
+                <option value="{{ status.value }}" {{ component.componentStatus == status.value ? 'selected' }}>
+                  {{ status.label() }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="btngroup" style="margin-top: 1.5rem;">
+      <button type="submit" class="btn submit">{{ 'Save'|t('app') }}</button>
+
+      {% if not isNew %}
+        <a href="{{ cpUrl('rabbits/builder/' ~ component.id) }}" class="btn">
+          {{ 'Open Builder'|t('rabbits') }}
+        </a>
+      {% endif %}
+    </div>
+  </form>
+
+  {% if not isNew and component.compiledTwig %}
+    <div style="margin-top: 2rem;">
+      <h2>{{ 'Compiled Twig'|t('rabbits') }}</h2>
+      <div class="code" style="padding: 1rem; background: var(--gray-050); border-radius: 4px; overflow-x: auto;">
+        <pre><code>{{ component.compiledTwig }}</code></pre>
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}
+
+{% js %}
+  new Craft.HandleGenerator('#title', '#handle');
+{% endjs %}

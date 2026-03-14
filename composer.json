@@ -1,0 +1,46 @@
+{
+    "name": "justinholtweb/craft-rabbits",
+    "description": "Webflow-style visual component builder for Craft CMS",
+    "type": "craft-plugin",
+    "version": "0.1.0",
+    "keywords": [
+        "craft",
+        "cms",
+        "craftcms",
+        "craft-plugin",
+        "rabbits",
+        "visual-builder",
+        "component-builder",
+        "webflow"
+    ],
+    "license": "proprietary",
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "authors": [
+        {
+            "name": "Justin Holt",
+            "homepage": "https://justinholt.com"
+        }
+    ],
+    "require": {
+        "php": ">=8.2",
+        "craftcms/cms": "^5.3.0"
+    },
+    "require-dev": {
+        "craftcms/ecs": "dev-main",
+        "craftcms/phpstan": "dev-main"
+    },
+    "autoload": {
+        "psr-4": {
+            "justinholtweb\\rabbits\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "Rabbits",
+        "handle": "rabbits",
+        "developer": "Justin Holt",
+        "developerUrl": "https://justinholt.com",
+        "documentationUrl": "https://craft-rabbits.com/docs",
+        "class": "justinholtweb\\rabbits\\Plugin"
+    }
+}

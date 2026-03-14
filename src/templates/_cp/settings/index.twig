@@ -1,0 +1,44 @@
+{% import '_includes/forms.twig' as forms %}
+
+{{ forms.textField({
+  label: 'Max Components'|t('rabbits'),
+  instructions: 'Maximum number of components allowed. Set to 0 for unlimited.'|t('rabbits'),
+  id: 'maxComponents',
+  name: 'maxComponents',
+  value: settings.maxComponents,
+  type: 'number',
+  min: 0,
+}) }}
+
+{{ forms.lightswitchField({
+  label: 'Enable Twig Cache'|t('rabbits'),
+  instructions: 'Cache compiled Twig output for faster rendering.'|t('rabbits'),
+  id: 'enableTwigCache',
+  name: 'enableTwigCache',
+  on: settings.enableTwigCache,
+}) }}
+
+{{ forms.lightswitchField({
+  label: 'Enable Custom CSS'|t('rabbits'),
+  instructions: 'Allow custom CSS per component.'|t('rabbits'),
+  id: 'enableCustomCss',
+  name: 'enableCustomCss',
+  on: settings.enableCustomCss,
+}) }}
+
+{{ forms.lightswitchField({
+  label: 'Enable Custom JS'|t('rabbits'),
+  instructions: 'Allow custom JavaScript per component. Disabled by default for security.'|t('rabbits'),
+  id: 'enableCustomJs',
+  name: 'enableCustomJs',
+  on: settings.enableCustomJs,
+}) }}
+
+{{ forms.textField({
+  label: 'Compiled Path'|t('rabbits'),
+  instructions: 'Directory for compiled Twig templates (relative to templates root).'|t('rabbits'),
+  id: 'compiledPath',
+  name: 'compiledPath',
+  value: settings.compiledPath,
+  class: 'code',
+}) }}

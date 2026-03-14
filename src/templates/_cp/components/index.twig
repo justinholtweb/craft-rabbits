@@ -1,0 +1,11 @@
+{% extends '_layouts/elementindex.twig' %}
+
+{% set title = 'Components'|t('rabbits') %}
+{% set elementType = 'justinholtweb\\rabbits\\elements\\Component' %}
+{% set canHaveDrafts = false %}
+
+{% block actionButton %}
+  <a href="{{ cpUrl('rabbits/components/new') }}" class="btn submit">
+    {{ 'New Component'|t('rabbits') }}
+  </a>
+{% endblock %}

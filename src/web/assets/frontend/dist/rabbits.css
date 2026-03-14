@@ -1,0 +1,9 @@
+/* Rabbits Frontend Base Styles */
+
+[data-rabbits-node] {
+  box-sizing: border-box;
+}
+
+[data-rabbits-animate] {
+  will-change: opacity, transform;
+}

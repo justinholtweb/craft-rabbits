@@ -1,0 +1,25 @@
+{% extends '_layouts/cp.twig' %}
+
+{% set title = component.title ~ ' — Builder'|t('rabbits') %}
+{% set fullPageForm = true %}
+
+{% set crumbs = [
+  { label: 'Rabbits'|t('rabbits'), url: cpUrl('rabbits') },
+  { label: 'Components'|t('rabbits'), url: cpUrl('rabbits/components') },
+  { label: component.title, url: cpUrl('rabbits/components/' ~ component.id) },
+] %}
+
+{% block content %}
+  <div id="rabbits-builder"
+       data-component-id="{{ component.id }}"
+       data-component-handle="{{ component.handle }}"
+       data-preview-url="{{ cpUrl('rabbits/preview/render', { componentId: component.id }) }}"
+       data-api-url="{{ cpUrl('rabbits/builder') }}"
+  >
+    {# Vue 3 builder app mounts here #}
+    <div class="rabbits-builder-loading">
+      <div class="spinner"></div>
+      <p>{{ 'Loading builder...'|t('rabbits') }}</p>
+    </div>
+  </div>
+{% endblock %}

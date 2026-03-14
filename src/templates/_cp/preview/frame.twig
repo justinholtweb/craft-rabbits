@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ component.title }} — Preview</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    {{ css|raw }}
+  </style>
+</head>
+<body>
+  {{ renderedHtml|raw }}
+
+  <script>
+    // Notify parent frame when content updates
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'rabbits:refresh') {
+        window.location.reload();
+      }
+    });
+  </script>
+</body>
+</html>
