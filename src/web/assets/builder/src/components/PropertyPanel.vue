@@ -229,6 +229,44 @@
       <p class="rabbits-prop-hint">Renders the {{ isFreeform ? 'Freeform' : 'Formie' }} form with this handle on the front end.</p>
     </div>
 
+    <!-- Dynamic List -->
+    <div v-if="isDynamicList" class="rabbits-prop-group">
+      <label class="rabbits-prop-label">Query (Twig)</label>
+      <textarea class="rabbits-prop-input rabbits-prop-input--code" rows="2" :value="node.query" @change="update('query', $event.target.value)" placeholder="craft.entries.section('blog').limit(6)"></textarea>
+      <label class="rabbits-prop-label">Item variable</label>
+      <input class="rabbits-prop-input rabbits-prop-input--code" :value="node.itemVar" @change="update('itemVar', $event.target.value)" placeholder="item" />
+      <p class="rabbits-prop-hint">Child elements repeat once per item. Use field bindings like <code>{{ (node.itemVar || 'item') }}.title</code>.</p>
+    </div>
+
+    <!-- Alert -->
+    <div v-if="isAlert" class="rabbits-prop-group">
+      <label class="rabbits-prop-flag"><input type="checkbox" :checked="!!node.dismissible" @change="update('dismissible', $event.target.checked)" /> dismissible</label>
+    </div>
+
+    <!-- Counter -->
+    <div v-if="isCounter" class="rabbits-prop-group">
+      <label class="rabbits-prop-label">End value</label>
+      <input type="number" class="rabbits-prop-input" :value="node.end" @change="update('end', parseFloat($event.target.value) || 0)" />
+      <label class="rabbits-prop-label">Duration (ms)</label>
+      <input type="number" class="rabbits-prop-input" :value="node.duration" @change="update('duration', parseInt($event.target.value) || 0)" />
+      <div class="rabbits-style-row">
+        <input class="rabbits-prop-input rabbits-prop-input--small" :value="node.prefix" @change="update('prefix', $event.target.value)" placeholder="prefix" />
+        <input class="rabbits-prop-input rabbits-prop-input--small" :value="node.suffix" @change="update('suffix', $event.target.value)" placeholder="suffix" />
+      </div>
+    </div>
+
+    <!-- Marquee -->
+    <div v-if="isMarquee" class="rabbits-prop-group">
+      <label class="rabbits-prop-label">Scroll duration (s)</label>
+      <input type="number" min="1" class="rabbits-prop-input" :value="node.speed" @change="update('speed', Math.max(1, parseInt($event.target.value) || 1))" />
+    </div>
+
+    <!-- Tooltip -->
+    <div v-if="isTooltip" class="rabbits-prop-group">
+      <label class="rabbits-prop-label">Tooltip text</label>
+      <input class="rabbits-prop-input" :value="node.text" @change="update('text', $event.target.value)" />
+    </div>
+
     <!-- CSS Classes -->
     <div class="rabbits-prop-group">
       <label class="rabbits-prop-label">Classes</label>
@@ -254,6 +292,21 @@
           <input class="rabbits-prop-input rabbits-prop-input--small rabbits-prop-input--code" v-model="newStyleProp" placeholder="property" />
           <input class="rabbits-prop-input rabbits-prop-input--small" v-model="newStyleValue" placeholder="value" @keyup.enter="addStyle" />
           <button class="rabbits-btn-icon" @click="addStyle">+</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom attributes (data-*, aria-*, Alpine x-* / @ / :) -->
+    <div class="rabbits-prop-group">
+      <label class="rabbits-prop-label">Attributes</label>
+      <div class="rabbits-styles">
+        <div v-for="(attr, i) in (node.attributes || [])" :key="i" class="rabbits-style-row">
+          <input class="rabbits-prop-input rabbits-prop-input--small rabbits-prop-input--code" :value="attr.name" @change="updateAttr(i, 'name', $event.target.value)" placeholder="x-show / @click" />
+          <input class="rabbits-prop-input rabbits-prop-input--small" :value="attr.value" @change="updateAttr(i, 'value', $event.target.value)" placeholder="value" />
+          <button class="rabbits-btn-icon" @click="removeAttr(i)">×</button>
+        </div>
+        <div class="rabbits-style-row rabbits-style-row--add">
+          <button class="rabbits-btn-icon" @click="addAttr">+</button>
         </div>
       </div>
     </div>
@@ -290,7 +343,8 @@
 
 <script>
 const FIXED_TAG_TYPES = ['image', 'video', 'icon', 'embed', 'html', 'input', 'textarea', 'select', 'divider', 'spacer',
-  'slideshow', 'carousel', 'slide', 'popup', 'accordion', 'accordion-item', 'tabs', 'tab', 'freeform', 'formie'];
+  'slideshow', 'carousel', 'slide', 'popup', 'accordion', 'accordion-item', 'tabs', 'tab', 'freeform', 'formie',
+  'alert', 'counter', 'marquee', 'tooltip'];
 
 export default {
   name: 'PropertyPanel',
@@ -342,6 +396,11 @@ export default {
     isTab() { return this.node.type === 'tab'; },
     isFreeform() { return this.node.type === 'freeform'; },
     isFormie() { return this.node.type === 'formie'; },
+    isDynamicList() { return this.node.type === 'dynamic-list'; },
+    isAlert() { return this.node.type === 'alert'; },
+    isCounter() { return this.node.type === 'counter'; },
+    isMarquee() { return this.node.type === 'marquee'; },
+    isTooltip() { return this.node.type === 'tooltip'; },
 
     contentType() { return this.node.content?.type || 'static'; },
     contentValue() { return this.node.content?.value || ''; },
@@ -419,6 +478,17 @@ export default {
 
     updateClasses(value) {
       this.$emit('update', this.node.id, { classes: value.split(/\s+/).filter(Boolean) });
+    },
+
+    updateAttr(i, key, value) {
+      const attributes = (this.node.attributes || []).map((a, idx) => idx === i ? { ...a, [key]: value } : a);
+      this.$emit('update', this.node.id, { attributes });
+    },
+    addAttr() {
+      this.$emit('update', this.node.id, { attributes: [...(this.node.attributes || []), { name: '', value: '' }] });
+    },
+    removeAttr(i) {
+      this.$emit('update', this.node.id, { attributes: (this.node.attributes || []).filter((_, idx) => idx !== i) });
     },
 
     updateStyle(prop, value) {

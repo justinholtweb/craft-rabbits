@@ -405,7 +405,88 @@ class Builder extends Component
             ],
 
             // ---------------------------------------------------------------
+            // Data
+            // ---------------------------------------------------------------
+            'dynamic-list' => [
+                'type' => 'dynamic-list',
+                'tag' => 'div',
+                'query' => 'craft.entries.section(\'\').limit(6)',
+                'itemVar' => 'item',
+                'classes' => [],
+                'styles' => ['default' => ['display' => 'grid', 'gap' => '1.5rem']],
+                'children' => [
+                    $this->createNode('container'),
+                ],
+            ],
+
+            // ---------------------------------------------------------------
             // Interactive
+            // ---------------------------------------------------------------
+            'card' => [
+                'type' => 'card',
+                'tag' => 'div',
+                'classes' => [],
+                'styles' => ['default' => [
+                    'padding' => '1.5rem',
+                    'background' => '#ffffff',
+                    'border' => '1px solid #e5e7eb',
+                    'borderRadius' => '0.5rem',
+                    'boxShadow' => '0 1px 3px rgba(0,0,0,0.1)',
+                ]],
+                'children' => [
+                    $this->createNode('heading'),
+                    $this->createNode('text'),
+                ],
+            ],
+            'alert' => [
+                'type' => 'alert',
+                'tag' => 'div',
+                'dismissible' => true,
+                'classes' => [],
+                'styles' => ['default' => [
+                    'padding' => '1rem 1.25rem',
+                    'background' => '#eff6ff',
+                    'border' => '1px solid #bfdbfe',
+                    'borderRadius' => '0.375rem',
+                    'color' => '#1e40af',
+                ]],
+                'children' => [
+                    $this->createNode('text'),
+                ],
+            ],
+            'counter' => [
+                'type' => 'counter',
+                'tag' => 'span',
+                'end' => 100,
+                'duration' => 2000,
+                'prefix' => '',
+                'suffix' => '',
+                'classes' => [],
+                'styles' => ['default' => ['fontSize' => '2.5rem', 'fontWeight' => '700']],
+            ],
+            'marquee' => [
+                'type' => 'marquee',
+                'tag' => 'div',
+                'speed' => 20,
+                'classes' => [],
+                'styles' => ['default' => []],
+                'children' => [
+                    $this->createNode('text'),
+                ],
+            ],
+            'tooltip' => [
+                'type' => 'tooltip',
+                'tag' => 'span',
+                'text' => 'Tooltip text',
+                'classes' => [],
+                'styles' => ['default' => []],
+                'children' => [
+                    $this->createNode('text'),
+                ],
+            ],
+
+            // ---------------------------------------------------------------
+            // Interactive (composite runtime components)
             // ---------------------------------------------------------------
             'slideshow' => [
                 'type' => 'slideshow',
@@ -559,6 +640,14 @@ class Builder extends Component
             ['type' => 'popup', 'label' => 'Popup', 'icon' => 'popup', 'category' => 'Interactive'],
             ['type' => 'accordion', 'label' => 'Accordion', 'icon' => 'accordion', 'category' => 'Interactive'],
             ['type' => 'tabs', 'label' => 'Tabs', 'icon' => 'tabs', 'category' => 'Interactive'],
+            ['type' => 'card', 'label' => 'Card', 'icon' => 'credit-card', 'category' => 'Interactive'],
+            ['type' => 'alert', 'label' => 'Alert', 'icon' => 'alert-triangle', 'category' => 'Interactive'],
+            ['type' => 'counter', 'label' => 'Counter', 'icon' => 'hash', 'category' => 'Interactive'],
+            ['type' => 'marquee', 'label' => 'Marquee', 'icon' => 'chevrons-right', 'category' => 'Interactive'],
+            ['type' => 'tooltip', 'label' => 'Tooltip', 'icon' => 'message-square', 'category' => 'Interactive'],
+
+            // Data
+            ['type' => 'dynamic-list', 'label' => 'Dynamic List', 'icon' => 'database', 'category' => 'Data'],
 
             // Embed
             ['type' => 'embed', 'label' => 'Embed', 'icon' => 'film', 'category' => 'Embed'],

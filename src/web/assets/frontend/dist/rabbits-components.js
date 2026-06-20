@@ -138,12 +138,65 @@
     });
   }
 
+  function initAlerts(root) {
+    root.querySelectorAll('[data-rabbits-alert]').forEach(function (el) {
+      if (el._rabbitsAlert) return;
+      el._rabbitsAlert = true;
+      el.querySelectorAll('[data-rabbits-alert-close]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          el.style.transition = 'opacity 0.2s ease';
+          el.style.opacity = '0';
+          setTimeout(function () { el.remove(); }, 200);
+        });
+      });
+    });
+  }
+
+  function initCounters(root) {
+    var counters = root.querySelectorAll('[data-rabbits-counter]');
+    if (!counters.length) return;
+
+    function run(el) {
+      var end = parseFloat(el.getAttribute('data-end')) || 0;
+      var duration = parseInt(el.getAttribute('data-duration')) || 2000;
+      var prefix = el.getAttribute('data-prefix') || '';
+      var suffix = el.getAttribute('data-suffix') || '';
+      var decimals = (String(end).split('.')[1] || '').length;
+      var startTime = null;
+      function tick(ts) {
+        if (startTime === null) startTime = ts;
+        var p = Math.min((ts - startTime) / duration, 1);
+        var value = (end * p).toFixed(decimals);
+        el.textContent = prefix + value + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          run(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    counters.forEach(function (el) {
+      if (el._rabbitsCounter) return;
+      el._rabbitsCounter = true;
+      observer.observe(el);
+    });
+  }
+
   function initAll(root) {
     root = root || document;
     initSliders(root);
     initPopups(root);
     initAccordions(root);
     initTabs(root);
+    initAlerts(root);
+    initCounters(root);
   }
 
   window.RabbitsComponents = { init: initAll };

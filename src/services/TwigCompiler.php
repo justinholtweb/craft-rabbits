@@ -54,6 +54,11 @@ class TwigCompiler extends Component
             'form' => $this->compileFormNode($node, $indent, $depth),
             'freeform' => $this->compileFreeformNode($node, $indent),
             'formie' => $this->compileFormieNode($node, $indent),
+            'dynamic-list' => $this->compileDynamicListNode($node, $indent, $depth),
+            'alert' => $this->compileAlertNode($node, $indent, $depth),
+            'counter' => $this->compileCounterNode($node, $indent),
+            'marquee' => $this->compileMarqueeNode($node, $indent, $depth),
+            'tooltip' => $this->compileTooltipNode($node, $indent, $depth),
             'slideshow' => $this->compileSliderNode($node, $indent, $depth, 'slideshow'),
             'carousel' => $this->compileSliderNode($node, $indent, $depth, 'carousel'),
             'popup' => $this->compilePopupNode($node, $indent, $depth),
@@ -338,6 +343,125 @@ class TwigCompiler extends Component
     }
 
     /**
+     * Compile a dynamic list — repeats its child template over a Craft query.
+     * The query is author-provided Twig (trusted, like the 'twig' content type).
+     */
+    private function compileDynamicListNode(array $node, string $indent, int $depth): string
+    {
+        $query = trim($node['query'] ?? '');
+        $itemVar = preg_replace('/[^a-zA-Z0-9_]/', '', $node['itemVar'] ?? 'item') ?: 'item';
+        $tag = $node['tag'] ?? 'div';
+        $attrs = $this->buildAttributes($node);
+
+        if ($query === '') {
+            return $indent . '<' . $tag . $attrs . '>' . "\n"
+                . $indent . '  {# Dynamic list: set a query #}' . "\n"
+                . $indent . '</' . $tag . '>';
+        }
+
+        $lines = [];
+        $lines[] = $indent . '<' . $tag . $attrs . '>';
+        $lines[] = $indent . '  {% for ' . $itemVar . ' in ' . $query . ' %}';
+        foreach ($node['children'] ?? [] as $child) {
+            $lines[] = $this->compileNode($child, $depth + 2);
+        }
+        $lines[] = $indent . '  {% endfor %}';
+        $lines[] = $indent . '</' . $tag . '>';
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Compile a dismissible alert / notice
+     */
+    private function compileAlertNode(array $node, string $indent, int $depth): string
+    {
+        $attrs = $this->buildAttributes($node);
+
+        $lines = [];
+        $lines[] = $indent . '<div class="rabbits-alert"' . $attrs . ' data-rabbits-alert role="alert">';
+        $lines[] = $indent . '  <div class="rabbits-alert__content">';
+        foreach ($node['children'] ?? [] as $child) {
+            $lines[] = $this->compileNode($child, $depth + 2);
+        }
+        $lines[] = $indent . '  </div>';
+        if (!empty($node['dismissible'])) {
+            $lines[] = $indent . '  <button type="button" class="rabbits-alert__close" data-rabbits-alert-close aria-label="Dismiss">&times;</button>';
+        }
+        $lines[] = $indent . '</div>';
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Compile an animated counter (counts up on scroll into view)
+     */
+    private function compileCounterNode(array $node, string $indent): string
+    {
+        $tag = $node['tag'] ?? 'span';
+        $attrs = $this->buildAttributes($node);
+        $end = (float) ($node['end'] ?? 0);
+        $endStr = rtrim(rtrim(number_format($end, 2, '.', ''), '0'), '.');
+        $duration = (int) ($node['duration'] ?? 2000);
+        $prefix = Html::encode($node['prefix'] ?? '');
+        $suffix = Html::encode($node['suffix'] ?? '');
+
+        return $indent . '<' . $tag . ' class="rabbits-counter"' . $attrs
+            . ' data-rabbits-counter data-end="' . $endStr . '" data-duration="' . $duration . '"'
+            . ' data-prefix="' . $prefix . '" data-suffix="' . $suffix . '">'
+            . $prefix . '0' . $suffix . '</' . $tag . '>';
+    }
+
+    /**
+     * Compile a marquee / ticker (pure CSS; content duplicated for a seamless loop)
+     */
+    private function compileMarqueeNode(array $node, string $indent, int $depth): string
+    {
+        $attrs = $this->buildAttributes($node);
+        $speed = max(1, (int) ($node['speed'] ?? 20));
+
+        $inner = [];
+        foreach ($node['children'] ?? [] as $child) {
+            $inner[] = $this->compileNode($child, $depth + 3);
+        }
+        $innerStr = implode("\n", $inner);
+
+        $lines = [];
+        $lines[] = $indent . '<div class="rabbits-marquee"' . $attrs . ' data-rabbits-marquee>';
+        $lines[] = $indent . '  <div class="rabbits-marquee__track" style="animation-duration: ' . $speed . 's">';
+        $lines[] = $indent . '    <div class="rabbits-marquee__group">';
+        $lines[] = $innerStr;
+        $lines[] = $indent . '    </div>';
+        $lines[] = $indent . '    <div class="rabbits-marquee__group" aria-hidden="true">';
+        $lines[] = $innerStr;
+        $lines[] = $indent . '    </div>';
+        $lines[] = $indent . '  </div>';
+        $lines[] = $indent . '</div>';
+
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Compile a tooltip (pure CSS; shows on hover/focus of the trigger)
+     */
+    private function compileTooltipNode(array $node, string $indent, int $depth): string
+    {
+        $tag = $node['tag'] ?? 'span';
+        $attrs = $this->buildAttributes($node);
+        $text = Html::encode($node['text'] ?? '');
+
+        $lines = [];
+        $lines[] = $indent . '<' . $tag . ' class="rabbits-tooltip"' . $attrs . ' tabindex="0" data-rabbits-tooltip>';
+        foreach ($node['children'] ?? [] as $child) {
+            $lines[] = $this->compileNode($child, $depth + 1);
+        }
+        $lines[] = $indent . '  <span class="rabbits-tooltip__bubble" role="tooltip">' . $text . '</span>';
+        $lines[] = $indent . '</' . $tag . '>';
+
+        return implode("\n", $lines);
+    }
+
+    /**
      * Compile a slideshow / carousel (shared slider runtime)
      */
     private function compileSliderNode(array $node, string $indent, int $depth, string $kind): string
@@ -505,7 +629,62 @@ class TwigCompiler extends Component
             $attrs[] = $this->buildAnimationAttributes($node['animations']);
         }
 
+        // Custom attributes (data-*, aria-*, id, Alpine x-* / @ / : bindings, …)
+        foreach ($this->buildCustomAttributes($node) as $attr) {
+            $attrs[] = $attr;
+        }
+
         return $attrs ? ' ' . implode(' ', $attrs) : '';
+    }
+
+    /**
+     * Build arbitrary author-defined attributes. Supports HTML attribute names
+     * including Alpine's x-*, @event and :bind forms. Values are HTML-escaped;
+     * a null/empty value emits a boolean attribute (name only).
+     */
+    private function buildCustomAttributes(array $node): array
+    {
+        $custom = $node['attributes'] ?? null;
+        if (!is_array($custom)) {
+            return [];
+        }
+
+        // Reserved — these are managed by their own editors/compile paths.
+        $reserved = ['class', 'style', 'id'];
+        $out = [];
+
+        foreach ($custom as $entry) {
+            // Accept either ['name' => ..., 'value' => ...] rows or name => value maps.
+            if (is_array($entry)) {
+                $name = trim((string) ($entry['name'] ?? ''));
+                $value = $entry['value'] ?? '';
+            } else {
+                continue;
+            }
+
+            if ($name === '' || !$this->isValidAttributeName($name)) {
+                continue;
+            }
+            if (in_array(strtolower($name), $reserved, true)) {
+                continue;
+            }
+
+            if ($value === '' || $value === null) {
+                $out[] = $name;
+            } else {
+                $out[] = $name . '="' . Html::encode((string) $value) . '"';
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * Allow standard attribute names plus Alpine prefixes (@, :, x-).
+     */
+    private function isValidAttributeName(string $name): bool
+    {
+        return (bool) preg_match('/^[@:]?[a-zA-Z_][a-zA-Z0-9_:.\-]*$/', $name);
     }
 
     /**
