@@ -190,34 +190,39 @@ class Component extends Element
 
     public function getTreeArray(): array
     {
-        if (is_string($this->tree)) {
-            return Json::decodeIfJson($this->tree) ?: [];
-        }
-        return $this->tree ?? [];
+        return $this->decodeJsonAttribute($this->tree);
     }
 
     public function getStylesArray(): array
     {
-        if (is_string($this->styles)) {
-            return Json::decodeIfJson($this->styles) ?: [];
-        }
-        return $this->styles ?? [];
+        return $this->decodeJsonAttribute($this->styles);
     }
 
     public function getAnimationsArray(): array
     {
-        if (is_string($this->animations)) {
-            return Json::decodeIfJson($this->animations) ?: [];
-        }
-        return $this->animations ?? [];
+        return $this->decodeJsonAttribute($this->animations);
     }
 
     public function getBreakpointsArray(): array
     {
-        if (is_string($this->breakpoints)) {
-            return Json::decodeIfJson($this->breakpoints) ?: [];
+        return $this->decodeJsonAttribute($this->breakpoints);
+    }
+
+    /**
+     * Normalize a JSON attribute to an array. Tolerates raw arrays, single-
+     * encoded strings, and legacy double-encoded strings without throwing.
+     */
+    private function decodeJsonAttribute(array|string|null $value): array
+    {
+        while (is_string($value) && $value !== '') {
+            $decoded = Json::decodeIfJson($value);
+            if ($decoded === $value) {
+                return []; // not valid JSON
+            }
+            $value = $decoded;
         }
-        return $this->breakpoints ?? [];
+
+        return is_array($value) ? $value : [];
     }
 
     public function getCpEditUrl(): ?string
@@ -238,15 +243,17 @@ class Component extends Element
             $record->id = $this->id;
         }
 
+        // Hand the JSON columns PHP arrays — Craft's json() column casts/encodes
+        // them on save. Pre-encoding here would double-encode the value.
         $record->handle = $this->handle;
         $record->componentType = $this->componentType;
         $record->componentStatus = $this->componentStatus;
-        $record->tree = is_array($this->tree) ? Json::encode($this->tree) : $this->tree;
-        $record->styles = is_array($this->styles) ? Json::encode($this->styles) : $this->styles;
-        $record->animations = is_array($this->animations) ? Json::encode($this->animations) : $this->animations;
+        $record->tree = $this->getTreeArray();
+        $record->styles = $this->getStylesArray();
+        $record->animations = $this->getAnimationsArray();
         $record->customCss = $this->customCss;
         $record->customJs = $this->customJs;
-        $record->breakpoints = is_array($this->breakpoints) ? Json::encode($this->breakpoints) : $this->breakpoints;
+        $record->breakpoints = $this->getBreakpointsArray();
         $record->compiledTwig = $this->compiledTwig;
 
         $record->save(false);

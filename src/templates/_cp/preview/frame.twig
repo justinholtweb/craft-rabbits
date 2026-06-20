@@ -13,6 +13,10 @@
 <body>
   {{ renderedHtml|raw }}
 
+  {% if runtimeJs is defined and runtimeJs %}
+    <script>{{ runtimeJs|raw }}</script>
+  {% endif %}
+
   <script>
     // Notify parent frame when content updates
     window.addEventListener('message', function(event) {

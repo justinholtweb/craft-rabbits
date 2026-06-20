@@ -45,7 +45,13 @@ class PreviewController extends Controller
         $styleManager = Plugin::getInstance()->styles;
         $themeBridge = Plugin::getInstance()->themes;
 
+        $runtime = Plugin::getInstance()->runtime;
+
         $css = [];
+        $baseCss = $runtime->getBaseCss();
+        if ($baseCss) {
+            $css[] = $baseCss;
+        }
         $tokensCss = $themeBridge->generateTokensCss();
         if ($tokensCss) {
             $css[] = $tokensCss;
@@ -61,10 +67,15 @@ class PreviewController extends Controller
         $variables = $this->getSampleVariables();
         $renderedHtml = Craft::$app->getView()->renderString($twig, $variables);
 
+        // Animation engine + interactive runtime so the preview behaves like the front end
+        $runtimeJs = Plugin::getInstance()->animations->generateAnimationScript()
+            . "\n" . $runtime->getScript();
+
         return $this->renderTemplate('rabbits/_cp/preview/frame', [
             'component' => $component,
             'renderedHtml' => $renderedHtml,
             'css' => implode("\n\n", $css),
+            'runtimeJs' => $runtimeJs,
         ]);
     }
 

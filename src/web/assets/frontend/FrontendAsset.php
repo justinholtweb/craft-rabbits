@@ -12,6 +12,7 @@ class FrontendAsset extends AssetBundle
 
         $this->js = [
             'rabbits-animations.js',
+            'rabbits-components.js',
         ];
 
         $this->css = [

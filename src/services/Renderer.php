@@ -84,6 +84,12 @@ class Renderer extends Component
 
         $css = [];
 
+        // Base + interactive component styles
+        $baseCss = Plugin::getInstance()->runtime->getBaseCss();
+        if ($baseCss) {
+            $css[] = $baseCss;
+        }
+
         // Token CSS variables
         $tokensCss = $themeBridge->generateTokensCss();
         if ($tokensCss) {
@@ -107,7 +113,8 @@ class Renderer extends Component
     public function getAnimationScript(): Markup
     {
         $animationManager = Plugin::getInstance()->animations;
-        $script = $animationManager->generateAnimationScript();
+        $script = $animationManager->generateAnimationScript()
+            . "\n" . Plugin::getInstance()->runtime->getScript();
 
         return Template::raw('<script>' . $script . '</script>');
     }
