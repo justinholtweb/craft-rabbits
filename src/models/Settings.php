@@ -31,12 +31,19 @@ class Settings extends Model
     /** @var string Output directory for compiled Twig (relative to templates root) */
     public string $compiledPath = '_rabbits';
 
+    /** @var string CSS framework integration: 'none' | 'tailwind' */
+    public string $cssFramework = 'none';
+
+    /** @var bool Auto-include Alpine.js (from CDN) alongside the Rabbits runtime */
+    public bool $loadAlpine = false;
+
     public function defineRules(): array
     {
         return [
             [['maxComponents', 'cacheDuration'], 'integer', 'min' => 0],
-            [['enableTwigCache', 'enableCustomCss', 'enableCustomJs'], 'boolean'],
+            [['enableTwigCache', 'enableCustomCss', 'enableCustomJs', 'loadAlpine'], 'boolean'],
             [['compiledPath'], 'string'],
+            [['cssFramework'], 'in', 'range' => ['none', 'tailwind']],
         ];
     }
 }

@@ -15,6 +15,7 @@ class RabbitsExtension extends AbstractExtension
             new TwigFunction('rabbits_component', [$this, 'renderComponent'], ['is_safe' => ['html']]),
             new TwigFunction('rabbits_styles', [$this, 'renderStyles'], ['is_safe' => ['html']]),
             new TwigFunction('rabbits_animations', [$this, 'renderAnimations'], ['is_safe' => ['html']]),
+            new TwigFunction('rabbits_alpine', [$this, 'renderAlpine'], ['is_safe' => ['html']]),
         ];
     }
 
@@ -46,5 +47,15 @@ class RabbitsExtension extends AbstractExtension
     public function renderAnimations(): Markup
     {
         return Plugin::getInstance()->renderer->getAnimationScript();
+    }
+
+    /**
+     * Output the Alpine.js CDN script
+     *
+     * Usage: {{ rabbits_alpine() }}
+     */
+    public function renderAlpine(): Markup
+    {
+        return Plugin::getInstance()->renderer->getAlpineScript();
     }
 }

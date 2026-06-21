@@ -7,3 +7,222 @@
 [data-rabbits-animate] {
   will-change: opacity, transform;
 }
+
+/* ---------------------------------------------------------------------------
+   Slider (slideshow & carousel)
+--------------------------------------------------------------------------- */
+.rabbits-slider {
+  position: relative;
+  overflow: hidden;
+}
+.rabbits-slider__track {
+  display: flex;
+  transition: transform 0.4s ease;
+}
+.rabbits-slider__slide {
+  flex: 0 0 100%;
+  min-width: 0;
+}
+.rabbits-slider__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.rabbits-slider__arrow--prev { left: 0.5rem; }
+.rabbits-slider__arrow--next { right: 0.5rem; }
+.rabbits-slider__dots {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  z-index: 2;
+}
+.rabbits-slider__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 0;
+}
+.rabbits-slider__dot.is-active { background: #fff; }
+
+/* ---------------------------------------------------------------------------
+   Popup / Modal
+--------------------------------------------------------------------------- */
+.rabbits-popup__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+.rabbits-popup__overlay.is-open { display: flex; }
+.rabbits-popup__dialog {
+  position: relative;
+  background: #fff;
+  border-radius: 0.5rem;
+  max-width: 32rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow: auto;
+  padding: 2rem;
+}
+.rabbits-popup__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+/* ---------------------------------------------------------------------------
+   Accordion
+--------------------------------------------------------------------------- */
+.rabbits-accordion__item { border-bottom: 1px solid #e5e7eb; }
+.rabbits-accordion__header {
+  width: 100%;
+  text-align: left;
+  padding: 1rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.rabbits-accordion__header::after { content: '+'; font-size: 1.25rem; line-height: 1; }
+.rabbits-accordion__item.is-open .rabbits-accordion__header::after { content: '\2212'; }
+.rabbits-accordion__panel { display: none; padding: 0 1rem 1rem; }
+.rabbits-accordion__item.is-open .rabbits-accordion__panel { display: block; }
+
+/* ---------------------------------------------------------------------------
+   Tabs
+--------------------------------------------------------------------------- */
+.rabbits-tabs__nav {
+  display: flex;
+  gap: 0.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.rabbits-tabs__tab {
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+.rabbits-tabs__tab.is-active {
+  color: #111827;
+  border-bottom-color: var(--color-primary, #3b82f6);
+  font-weight: 600;
+}
+.rabbits-tabs__panel { display: none; padding: 1.25rem 0; }
+.rabbits-tabs__panel.is-active { display: block; }
+
+/* ---------------------------------------------------------------------------
+   Alert
+--------------------------------------------------------------------------- */
+.rabbits-alert {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.rabbits-alert__content { flex: 1; }
+.rabbits-alert__close {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+}
+.rabbits-alert__close:hover { opacity: 1; }
+
+/* ---------------------------------------------------------------------------
+   Marquee / Ticker
+--------------------------------------------------------------------------- */
+.rabbits-marquee { overflow: hidden; width: 100%; }
+.rabbits-marquee__track {
+  display: flex;
+  width: max-content;
+  animation-name: rabbits-marquee-scroll;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+.rabbits-marquee:hover .rabbits-marquee__track { animation-play-state: paused; }
+.rabbits-marquee__group {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding-right: 2rem;
+  flex-shrink: 0;
+}
+@keyframes rabbits-marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ---------------------------------------------------------------------------
+   Tooltip
+--------------------------------------------------------------------------- */
+.rabbits-tooltip { position: relative; display: inline-block; cursor: help; }
+.rabbits-tooltip__bubble {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  background: #111827;
+  color: #fff;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s ease;
+  z-index: 10;
+}
+.rabbits-tooltip:hover .rabbits-tooltip__bubble,
+.rabbits-tooltip:focus .rabbits-tooltip__bubble,
+.rabbits-tooltip:focus-within .rabbits-tooltip__bubble {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ---------------------------------------------------------------------------
+   Counter
+--------------------------------------------------------------------------- */
+.rabbits-counter { display: inline-block; font-variant-numeric: tabular-nums; }

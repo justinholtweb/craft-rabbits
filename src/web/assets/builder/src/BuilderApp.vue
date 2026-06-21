@@ -29,35 +29,44 @@
 
     <!-- Main layout: sidebar + canvas + properties -->
     <div class="rabbits-layout">
-      <!-- Left sidebar: atom palette + layer tree -->
+      <!-- Left sidebar: tabbed palette + layer tree -->
       <div class="rabbits-sidebar rabbits-sidebar--left">
-        <div class="rabbits-panel">
-          <div class="rabbits-panel__header">Add Element</div>
-          <div class="rabbits-palette">
-            <button
-              v-for="atom in atomPalette"
-              :key="atom.type"
-              class="rabbits-palette__item"
-              draggable="true"
-              @dragstart="onDragStartAtom($event, atom.type)"
-              @click="addAtomToRoot(atom.type)"
-            >
-              <span class="rabbits-palette__label">{{ atom.label }}</span>
-            </button>
-          </div>
+        <div class="rabbits-sidebar__tabs">
+          <button class="rabbits-sidebar__tab" :class="{ active: leftTab === 'add' }" @click="leftTab = 'add'">Add</button>
+          <button class="rabbits-sidebar__tab" :class="{ active: leftTab === 'layers' }" @click="leftTab = 'layers'">Layers</button>
         </div>
 
-        <div class="rabbits-panel">
-          <div class="rabbits-panel__header">Layer Tree</div>
-          <div class="rabbits-layers">
-            <LayerNode
-              v-if="tree && tree.id"
-              :node="tree"
-              :selected-id="selectedNodeId"
-              :depth="0"
-              @select="selectNode"
-              @drop="onDropNode"
-            />
+        <div class="rabbits-sidebar__scroll">
+          <div v-show="leftTab === 'add'" class="rabbits-panel">
+            <div v-for="group in paletteGroups" :key="group.category" class="rabbits-palette-group">
+              <div class="rabbits-palette-group__label">{{ group.category }}</div>
+              <div class="rabbits-palette">
+                <button
+                  v-for="atom in group.atoms"
+                  :key="atom.type"
+                  class="rabbits-palette__item"
+                  draggable="true"
+                  @dragstart="onDragStartAtom($event, atom.type)"
+                  @click="addAtomToRoot(atom.type)"
+                >
+                  <span class="rabbits-palette__icon" v-html="iconSvg(atom.icon)"></span>
+                  <span class="rabbits-palette__label">{{ atom.label }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div v-show="leftTab === 'layers'" class="rabbits-panel">
+            <div class="rabbits-layers">
+              <LayerNode
+                v-if="tree && tree.id"
+                :node="tree"
+                :selected-id="selectedNodeId"
+                :depth="0"
+                @select="selectNode"
+                @drop="onDropNode"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -79,7 +88,10 @@
           <PropertyPanel
             :node="selectedNode"
             :breakpoint="activeBreakpoint"
+            :presets="animationPresets"
+            :triggers="animationTriggers"
             @update="onUpdateNode"
+            @add-child="onAddChild"
           />
         </div>
         <div class="rabbits-panel" v-else>
@@ -94,6 +106,7 @@
 <script>
 import LayerNode from './components/LayerNode.vue';
 import PropertyPanel from './components/PropertyPanel.vue';
+import { iconSvg } from './icons.js';
 
 export default {
   name: 'BuilderApp',
@@ -104,7 +117,6 @@ export default {
     componentId: { type: Number, required: true },
     componentHandle: { type: String, required: true },
     previewUrl: { type: String, required: true },
-    apiUrl: { type: String, required: true },
   },
 
   data() {
@@ -114,7 +126,10 @@ export default {
       tree: {},
       selectedNodeId: null,
       activeBreakpoint: 'desktop',
+      leftTab: 'add',
       atomPalette: [],
+      animationPresets: {},
+      animationTriggers: {},
       breakpoints: [
         { key: 'desktop', label: 'Desktop', icon: '🖥', width: '100%' },
         { key: 'tablet', label: 'Tablet', icon: '📱', width: '768px' },
@@ -127,6 +142,20 @@ export default {
     selectedNode() {
       if (!this.selectedNodeId || !this.tree?.id) return null;
       return this.findNode(this.tree, this.selectedNodeId);
+    },
+
+    paletteGroups() {
+      const order = [];
+      const byCategory = {};
+      for (const atom of this.atomPalette) {
+        const category = atom.category || 'Elements';
+        if (!byCategory[category]) {
+          byCategory[category] = [];
+          order.push(category);
+        }
+        byCategory[category].push(atom);
+      }
+      return order.map(category => ({ category, atoms: byCategory[category] }));
     },
 
     canvasStyle() {
@@ -144,15 +173,19 @@ export default {
   },
 
   methods: {
+    iconSvg,
+
     async loadData() {
       try {
         // Load tree
         const treeRes = await this.api('get-tree', { componentId: this.componentId }, 'GET');
         this.tree = treeRes.tree || {};
 
-        // Load palette
+        // Load palette + animation presets/triggers
         const paletteRes = await this.api('get-palette', {}, 'GET');
         this.atomPalette = paletteRes.atoms || [];
+        this.animationPresets = paletteRes.animationPresets || {};
+        this.animationTriggers = paletteRes.animationTriggers || {};
       } catch (err) {
         console.error('Failed to load builder data:', err);
       }
@@ -205,7 +238,15 @@ export default {
       }
     },
 
+    async onAddChild(parentId, childType) {
+      await this.addNode(childType, parentId);
+    },
+
     async onUpdateNode(nodeId, updates) {
+      if (updates && updates._delete) {
+        await this.removeNode(nodeId);
+        return;
+      }
       try {
         const res = await this.api('update-node', {
           componentId: this.componentId,
@@ -287,16 +328,19 @@ export default {
 
     async api(action, data, method = 'POST') {
       const csrfToken = Craft.csrfTokenValue;
-      const url = `${this.apiUrl}/${action}`;
+      // Craft.getActionUrl builds a correct action URL regardless of the site's
+      // pretty-URL / pathParam config (path-based vs index.php?p=… style).
+      const path = `rabbits/builder/${action}`;
 
       if (method === 'GET') {
-        const params = new URLSearchParams(data);
-        const res = await fetch(`${url}?${params}`, {
+        const url = Craft.getActionUrl(path, data);
+        const res = await fetch(url, {
           headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json' },
         });
         return res.json();
       }
 
+      const url = Craft.getActionUrl(path);
       const res = await fetch(url, {
         method: 'POST',
         headers: {

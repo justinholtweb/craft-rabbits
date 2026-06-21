@@ -4,6 +4,11 @@ import { resolve } from 'path';
 
 export default defineConfig({
   plugins: [vue()],
+  // Vite's library mode doesn't replace process.env.NODE_ENV, but the bundled
+  // Vue runtime references it — define it so it isn't undefined in the browser.
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('production'),
+  },
   build: {
     outDir: resolve(__dirname, 'dist'),
     emptyOutDir: true,
@@ -14,11 +19,7 @@ export default defineConfig({
       formats: ['iife'],
     },
     rollupOptions: {
-      external: ['vue'],
       output: {
-        globals: {
-          vue: 'Vue',
-        },
         assetFileNames: (assetInfo) => {
           if (assetInfo.name === 'style.css') return 'builder.css';
           return assetInfo.name;

@@ -5,6 +5,8 @@ namespace justinholtweb\rabbits\controllers;
 use Craft;
 use craft\web\Controller;
 use justinholtweb\rabbits\Plugin;
+use justinholtweb\rabbits\web\assets\builder\BuilderAsset;
+use yii\web\NotFoundHttpException;
 use yii\web\Response;
 
 /**
@@ -20,6 +22,24 @@ class BuilderController extends Controller
 
         $this->requirePermission('rabbits:manageComponents');
         return true;
+    }
+
+    /**
+     * Render the visual builder page (mounts the Vue app)
+     */
+    public function actionIndex(int $componentId): Response
+    {
+        $component = Plugin::getInstance()->components->getById($componentId);
+
+        if (!$component) {
+            throw new NotFoundHttpException('Component not found.');
+        }
+
+        $this->getView()->registerAssetBundle(BuilderAsset::class);
+
+        return $this->renderTemplate('rabbits/_cp/builder/index', [
+            'component' => $component,
+        ]);
     }
 
     /**

@@ -42,3 +42,23 @@
   value: settings.compiledPath,
   class: 'code',
 }) }}
+
+{{ forms.selectField({
+  label: 'CSS Framework'|t('rabbits'),
+  instructions: 'Choose a CSS framework integration. With Tailwind, add your compiled components to your Tailwind `content` paths (or safelist) so utility classes are not purged.'|t('rabbits'),
+  id: 'cssFramework',
+  name: 'cssFramework',
+  value: settings.cssFramework,
+  options: [
+    { label: 'None'|t('rabbits'), value: 'none' },
+    { label: 'Tailwind CSS'|t('rabbits'), value: 'tailwind' },
+  ],
+}) }}
+
+{{ forms.lightswitchField({
+  label: 'Load Alpine.js'|t('rabbits'),
+  instructions: 'Auto-include Alpine.js (pinned CDN build) alongside the Rabbits runtime, so x-* attribute bindings work. You can also call {{ rabbits_alpine() }} manually.'|t('rabbits'),
+  id: 'loadAlpine',
+  name: 'loadAlpine',
+  on: settings.loadAlpine,
+}) }}

@@ -18,6 +18,7 @@ use justinholtweb\rabbits\services\AnimationManager;
 use justinholtweb\rabbits\services\Builder;
 use justinholtweb\rabbits\services\Components;
 use justinholtweb\rabbits\services\Renderer;
+use justinholtweb\rabbits\services\Runtime;
 use justinholtweb\rabbits\services\StyleManager;
 use justinholtweb\rabbits\services\ThemeBridge;
 use justinholtweb\rabbits\services\TwigCompiler;
@@ -34,6 +35,7 @@ use yii\base\Event;
  * @property-read AnimationManager $animations
  * @property-read ThemeBridge $themes
  * @property-read Renderer $renderer
+ * @property-read Runtime $runtime
  * @method Settings getSettings()
  */
 class Plugin extends BasePlugin
@@ -53,6 +55,7 @@ class Plugin extends BasePlugin
                 'animations' => AnimationManager::class,
                 'themes' => ThemeBridge::class,
                 'renderer' => Renderer::class,
+                'runtime' => Runtime::class,
             ],
         ];
     }
@@ -150,7 +153,7 @@ class Plugin extends BasePlugin
                 $event->rules['rabbits/components/<componentId:\d+>'] = 'rabbits/components/edit';
 
                 // Visual builder
-                $event->rules['rabbits/builder/<componentId:\d+>'] = ['template' => 'rabbits/_cp/builder/index'];
+                $event->rules['rabbits/builder/<componentId:\d+>'] = 'rabbits/builder/index';
 
                 // Preview
                 $event->rules['rabbits/preview/render'] = 'rabbits/preview/render';

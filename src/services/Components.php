@@ -20,8 +20,8 @@ class Components extends BaseComponent
 
     public function save(Component $component): bool
     {
-        if ($component->getIsNew()) {
-            // Compile Twig on save
+        if ($component->id === null) {
+            // Compile Twig on first save
             $compiler = new TwigCompiler();
             $component->compiledTwig = $compiler->compile($component);
         }
@@ -44,7 +44,7 @@ class Components extends BaseComponent
 
         $duplicate = new Component();
         $duplicate->title = $original->title . ' (Copy)';
-        $duplicate->handle = $original->handle . '_copy';
+        $duplicate->handle = $this->uniqueHandle($original->handle . '_copy');
         $duplicate->componentType = $original->componentType;
         $duplicate->componentStatus = 'draft';
         $duplicate->tree = $original->tree;
@@ -59,6 +59,23 @@ class Components extends BaseComponent
         }
 
         return null;
+    }
+
+    /**
+     * Return $base, or $base2, $base3… — whichever handle is not yet taken.
+     */
+    private function uniqueHandle(string $base): string
+    {
+        if (!$this->getByHandle($base)) {
+            return $base;
+        }
+
+        $i = 2;
+        while ($this->getByHandle($base . $i)) {
+            $i++;
+        }
+
+        return $base . $i;
     }
 
     public function recompile(Component $component): bool
