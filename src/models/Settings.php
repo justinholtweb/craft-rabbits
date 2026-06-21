@@ -37,11 +37,19 @@ class Settings extends Model
     /** @var bool Auto-include Alpine.js (from CDN) alongside the Rabbits runtime */
     public bool $loadAlpine = false;
 
+    /**
+     * @var bool Emit Smoke front-end editing attributes on field-bound nodes.
+     * Requires the Smoke plugin; output is also guarded at render time so it
+     * produces nothing when Smoke is absent. Changing this requires recompiling
+     * components for existing compiled Twig to pick it up.
+     */
+    public bool $enableSmokeEditing = false;
+
     public function defineRules(): array
     {
         return [
             [['maxComponents', 'cacheDuration'], 'integer', 'min' => 0],
-            [['enableTwigCache', 'enableCustomCss', 'enableCustomJs', 'loadAlpine'], 'boolean'],
+            [['enableTwigCache', 'enableCustomCss', 'enableCustomJs', 'loadAlpine', 'enableSmokeEditing'], 'boolean'],
             [['compiledPath'], 'string'],
             [['cssFramework'], 'in', 'range' => ['none', 'tailwind']],
         ];

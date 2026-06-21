@@ -62,3 +62,11 @@
   name: 'loadAlpine',
   on: settings.loadAlpine,
 }) }}
+
+{{ forms.lightswitchField({
+  label: 'Enable Smoke editing'|t('rabbits'),
+  instructions: 'Emit Smoke front-end editing attributes on field-bound nodes so built components can be edited in place. Requires the Smoke plugin. Recompile components after changing this.'|t('rabbits'),
+  id: 'enableSmokeEditing',
+  name: 'enableSmokeEditing',
+  on: settings.enableSmokeEditing,
+}) }}

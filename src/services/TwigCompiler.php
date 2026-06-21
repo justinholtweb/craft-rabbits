@@ -5,6 +5,7 @@ namespace justinholtweb\rabbits\services;
 use craft\base\Component;
 use craft\helpers\Html;
 use justinholtweb\rabbits\elements\Component as ComponentElement;
+use justinholtweb\rabbits\Plugin;
 
 /**
  * Compiles a component's JSON tree into a Twig partial
@@ -619,9 +620,15 @@ class TwigCompiler extends Component
             $attrs[] = 'style="' . $style . '"';
         }
 
-        // Data attribute for node identification (useful for Smoke integration)
+        // Data attribute for node identification (used by the builder)
         if (isset($node['id'])) {
             $attrs[] = 'data-rabbits-node="' . Html::encode($node['id']) . '"';
+        }
+
+        // Smoke front-end editing attributes for field-bound nodes
+        $smoke = $this->buildSmokeAttributes($node);
+        if ($smoke !== '') {
+            $attrs[] = $smoke;
         }
 
         // Animation data attributes
@@ -635,6 +642,47 @@ class TwigCompiler extends Component
         }
 
         return $attrs ? ' ' . implode(' ', $attrs) : '';
+    }
+
+    /**
+     * Build Smoke front-end editing attributes for a field-bound node.
+     *
+     * Emits a render-time guarded call to Smoke's own `craft.smoke.editable()`
+     * helper so the correct data-smoke-* attributes (including type/config) are
+     * produced when Smoke is installed, and nothing is produced otherwise.
+     *
+     * Only simple bindings of the form `<object>.<handle>` (e.g. `entry.title`)
+     * are supported; complex chains (e.g. `entry.image.one().url`) are skipped
+     * since they don't map to a single editable field.
+     */
+    private function buildSmokeAttributes(array $node): string
+    {
+        if (!Plugin::getInstance()->getSettings()->enableSmokeEditing) {
+            return '';
+        }
+
+        // Resolve the binding expression from a field-bound content or src node.
+        $binding = null;
+        if (($node['content']['type'] ?? null) === 'field') {
+            $binding = $node['content']['binding'] ?? null;
+        } elseif (in_array($node['src']['type'] ?? null, ['field', 'asset'], true)) {
+            $binding = $node['src']['binding'] ?? null;
+        }
+
+        if (!is_string($binding) || $binding === '') {
+            return '';
+        }
+
+        // Only simple `object.handle` bindings map to a single editable field.
+        if (!preg_match('/^([a-zA-Z_][a-zA-Z0-9_]*)\.([a-zA-Z_][a-zA-Z0-9_]*)$/', trim($binding), $m)) {
+            return '';
+        }
+
+        [$object, $handle] = [$m[1], $m[2]];
+
+        return '{% if craft.smoke is defined and ' . $object . ' is defined and ' . $object . ' %}'
+            . '{{ craft.smoke.editable(' . $object . ", '" . $handle . "')|raw }}"
+            . '{% endif %}';
     }
 
     /**

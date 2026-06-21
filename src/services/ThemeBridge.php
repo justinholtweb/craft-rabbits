@@ -68,63 +68,24 @@ class ThemeBridge extends Component
     }
 
     /**
-     * Read tokens from the active Sourdough theme's tokens.css
+     * Read tokens from the active Sourdough theme.
+     *
+     * Delegates to Sourdough's ThemeService, which owns the canonical tokens.css
+     * location and parse format. Falls back to Rabbits' own tokens when Sourdough
+     * has no active theme or the theme ships no tokens.
      */
     private function getSourdoughTokens(): array
     {
         $plugin = Craft::$app->getPlugins()->getPlugin('sourdough');
 
-        if (!$plugin) {
-            return [];
-        }
-
-        $settings = $plugin->getSettings();
-        $activeTheme = $settings->activeTheme ?? null;
-
-        if (!$activeTheme) {
+        // Guard against older Sourdough versions without the public token API.
+        if (!$plugin || !isset($plugin->themes) || !method_exists($plugin->themes, 'getActiveThemeTokens')) {
             return $this->getRabbitsTokens();
         }
 
-        // Attempt to read tokens.css from the active theme
-        $themePath = Craft::getAlias('@root/templates/_themes/' . $activeTheme . '/assets/css/tokens.css');
+        $tokens = $plugin->themes->getActiveThemeTokens();
 
-        if (!$themePath || !file_exists($themePath)) {
-            return $this->getRabbitsTokens();
-        }
-
-        return $this->parseTokensCss(file_get_contents($themePath));
-    }
-
-    /**
-     * Parse CSS custom properties from a tokens.css file
-     */
-    private function parseTokensCss(string $css): array
-    {
-        $tokens = [];
-
-        // Match CSS custom properties: --category-name: value;
-        if (preg_match_all('/--([a-z0-9-]+):\s*([^;]+);/i', $css, $matches, PREG_SET_ORDER)) {
-            foreach ($matches as $match) {
-                $fullHandle = $match[1];
-                $value = trim($match[2]);
-
-                // Split handle into category and name (e.g., "color-primary" → category: "color", name: "primary")
-                $parts = explode('-', $fullHandle, 2);
-                $category = $parts[0];
-                $name = $parts[1] ?? $fullHandle;
-
-                $tokens[] = [
-                    'handle' => $fullHandle,
-                    'category' => $category,
-                    'label' => $this->handleToLabel($fullHandle),
-                    'value' => $value,
-                    'cssVar' => 'var(--' . $fullHandle . ')',
-                    'source' => 'sourdough',
-                ];
-            }
-        }
-
-        return $tokens;
+        return !empty($tokens) ? $tokens : $this->getRabbitsTokens();
     }
 
     /**
@@ -193,13 +154,5 @@ class ThemeBridge extends Component
         $lines[] = '}';
 
         return implode("\n", $lines);
-    }
-
-    /**
-     * Convert a handle to a human-readable label
-     */
-    private function handleToLabel(string $handle): string
-    {
-        return ucwords(str_replace(['-', '_'], ' ', $handle));
     }
 }
