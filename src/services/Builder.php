@@ -589,14 +589,29 @@ class Builder extends Component
                 ],
             ],
 
-            default => [
-                'type' => $type,
-                'tag' => 'div',
-                'classes' => [],
-                'styles' => ['default' => []],
-                'children' => [],
-            ],
+            default => $this->resolveCustomDefaults($type),
         };
+    }
+
+    /**
+     * Defaults for a custom (registered) type, or a plain container fallback.
+     */
+    private function resolveCustomDefaults(string $type): array
+    {
+        $base = [
+            'type' => $type,
+            'tag' => 'div',
+            'classes' => [],
+            'styles' => ['default' => []],
+            'children' => [],
+        ];
+
+        $definition = $this->componentTypes()?->get($type);
+        if ($definition) {
+            return array_merge($base, $definition->defaults, ['type' => $type]);
+        }
+
+        return $base;
     }
 
     /**
@@ -604,7 +619,7 @@ class Builder extends Component
      */
     public function getAtomPalette(): array
     {
-        return [
+        $palette = [
             // Layout
             ['type' => 'container', 'label' => 'Container', 'icon' => 'box', 'category' => 'Layout'],
             ['type' => 'section', 'label' => 'Section', 'icon' => 'layout', 'category' => 'Layout'],
@@ -653,6 +668,24 @@ class Builder extends Component
             ['type' => 'embed', 'label' => 'Embed', 'icon' => 'film', 'category' => 'Embed'],
             ['type' => 'html', 'label' => 'HTML', 'icon' => 'code', 'category' => 'Embed'],
         ];
+
+        // Custom element types registered by other plugins/modules.
+        $custom = $this->componentTypes()?->getPaletteItems() ?? [];
+
+        return array_merge($palette, $custom);
+    }
+
+    /**
+     * The custom-type registry, or null when Craft isn't booted (e.g. in unit
+     * tests) — keeping the built-in tree logic usable in isolation.
+     */
+    private function componentTypes(): ?ComponentTypes
+    {
+        if (!class_exists('Yii', false) || \Yii::$app === null) {
+            return null;
+        }
+
+        return \justinholtweb\rabbits\Plugin::getInstance()?->componentTypes;
     }
 
     /**

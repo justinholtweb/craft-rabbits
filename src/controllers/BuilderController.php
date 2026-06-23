@@ -258,6 +258,7 @@ class BuilderController extends Controller
             'atoms' => $builder->getAtomPalette(),
             'animationPresets' => $animations->getPresets(),
             'animationTriggers' => $animations->getTriggers(),
+            'componentTypes' => Plugin::getInstance()->componentTypes->getClientDefinitions(),
         ]);
     }
 

@@ -5,6 +5,7 @@ namespace justinholtweb\rabbits\services;
 use craft\base\Component;
 use craft\helpers\Html;
 use justinholtweb\rabbits\elements\Component as ComponentElement;
+use justinholtweb\rabbits\events\CompileNodeEvent;
 use justinholtweb\rabbits\Plugin;
 
 /**
@@ -12,6 +13,12 @@ use justinholtweb\rabbits\Plugin;
  */
 class TwigCompiler extends Component
 {
+    /**
+     * @event CompileNodeEvent Raised after each node is compiled, so listeners
+     * can inspect or rewrite its markup.
+     */
+    public const EVENT_COMPILE_NODE = 'compileNode';
+
     /**
      * Compile a component element into Twig markup
      */
@@ -41,7 +48,7 @@ class TwigCompiler extends Component
         $indent = str_repeat('  ', $depth);
         $type = $node['type'] ?? 'container';
 
-        return match ($type) {
+        $html = match ($type) {
             'heading', 'text', 'link', 'button', 'listitem', 'submit' => $this->compileTextNode($node, $indent, $depth),
             'label' => $this->compileLabelNode($node, $indent),
             'image' => $this->compileImageNode($node, $indent),
@@ -67,8 +74,41 @@ class TwigCompiler extends Component
             'tabs' => $this->compileTabsNode($node, $indent, $depth),
             'divider' => $this->compileSelfClosingNode($node, $indent),
             'spacer' => $this->compileEmptyNode($node, $indent),
-            default => $this->compileContainerNode($node, $indent, $depth),
+            default => $this->compileCustomNode($node, $indent, $depth),
         };
+
+        // Let listeners inspect or rewrite the compiled markup for any node.
+        if ($this->hasEventHandlers(self::EVENT_COMPILE_NODE)) {
+            $event = new CompileNodeEvent(['node' => $node, 'html' => $html, 'depth' => $depth]);
+            $this->trigger(self::EVENT_COMPILE_NODE, $event);
+            return $event->html;
+        }
+
+        return $html;
+    }
+
+    /**
+     * Compile a registered custom type via its render callback, or fall back to
+     * a plain container.
+     */
+    private function compileCustomNode(array $node, string $indent, int $depth): string
+    {
+        $definition = Plugin::getInstance()?->componentTypes->get($node['type'] ?? '');
+
+        if ($definition && is_callable($definition->render)) {
+            $attrs = $this->buildAttributes($node);
+            $renderChildren = function (array $children) use ($depth): string {
+                $out = [];
+                foreach ($children as $child) {
+                    $out[] = $this->compileNode($child, $depth + 1);
+                }
+                return implode("\n", $out);
+            };
+
+            return $indent . ($definition->render)($node, $attrs, $renderChildren);
+        }
+
+        return $this->compileContainerNode($node, $indent, $depth);
     }
 
     /**

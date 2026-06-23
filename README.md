@@ -143,6 +143,12 @@ On Craft Pro, Rabbits registers granular permissions: **Access Rabbits**,
 **Manage Settings**. Because authors can write Twig bindings, grant
 **Manage Components** only to trusted users.
 
+## Extending Rabbits
+
+Plugins and modules can register their own element types, add animation presets,
+and rewrite compiled markup through Rabbits' events. See **[EXTENDING.md](EXTENDING.md)**
+for the full developer guide, including a custom-element-type example.
+
 ## Building the builder assets
 
 The control-panel builder is a Vue 3 app. To rebuild it after changing the

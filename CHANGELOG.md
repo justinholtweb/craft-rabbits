@@ -25,6 +25,10 @@
   Integrity), configurable in Settings.
 - Twig functions: `rabbits_component()`, `rabbits_styles()`,
   `rabbits_animations()`, and `rabbits_alpine()`.
+- Developer extensibility: register custom element types
+  (`ComponentTypes::EVENT_REGISTER_COMPONENT_TYPES`), add animation presets
+  (`AnimationManager::EVENT_REGISTER_ANIMATION_PRESETS`), and rewrite compiled
+  markup (`TwigCompiler::EVENT_COMPILE_NODE`). See `EXTENDING.md`.
 - Optional Sourdough theme bridge for design tokens, and `data-rabbits-node`
   hooks for Smoke front-end editing.
 - Granular user permissions (Craft Pro).

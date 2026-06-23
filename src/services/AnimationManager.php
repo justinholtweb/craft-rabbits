@@ -4,6 +4,7 @@ namespace justinholtweb\rabbits\services;
 
 use craft\base\Component;
 use justinholtweb\rabbits\enums\AnimationTrigger;
+use justinholtweb\rabbits\events\RegisterAnimationPresetsEvent;
 
 /**
  * Processes animation configurations and generates frontend JS/CSS
@@ -11,11 +12,17 @@ use justinholtweb\rabbits\enums\AnimationTrigger;
 class AnimationManager extends Component
 {
     /**
+     * @event RegisterAnimationPresetsEvent Raised when collecting animation
+     * presets, so listeners can add their own (or override built-ins).
+     */
+    public const EVENT_REGISTER_ANIMATION_PRESETS = 'registerAnimationPresets';
+
+    /**
      * Get available animation presets
      */
     public function getPresets(): array
     {
-        return [
+        $presets = [
             'fade-in' => [
                 'label' => 'Fade In',
                 'keyframes' => [
@@ -73,6 +80,14 @@ class AnimationManager extends Component
                 'options' => ['duration' => 600, 'easing' => 'ease-out'],
             ],
         ];
+
+        if ($this->hasEventHandlers(self::EVENT_REGISTER_ANIMATION_PRESETS)) {
+            $event = new RegisterAnimationPresetsEvent(['presets' => $presets]);
+            $this->trigger(self::EVENT_REGISTER_ANIMATION_PRESETS, $event);
+            return $event->presets;
+        }
+
+        return $presets;
     }
 
     /**

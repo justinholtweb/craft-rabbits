@@ -267,6 +267,24 @@
       <input class="rabbits-prop-input" :value="node.text" @change="update('text', $event.target.value)" />
     </div>
 
+    <!-- Custom (registered) component type fields -->
+    <div v-if="customFields.length" class="rabbits-prop-group">
+      <div v-for="field in customFields" :key="field.name" style="margin-bottom: 0.6rem">
+        <label v-if="field.type === 'checkbox'" class="rabbits-prop-flag">
+          <input type="checkbox" :checked="!!node[field.name]" @change="update(field.name, $event.target.checked)" />
+          {{ field.label || field.name }}
+        </label>
+        <template v-else>
+          <label class="rabbits-prop-label">{{ field.label || field.name }}</label>
+          <select v-if="field.type === 'select'" class="rabbits-prop-input" :value="node[field.name]" @change="update(field.name, $event.target.value)">
+            <option v-for="opt in (field.options || [])" :key="optValue(opt)" :value="optValue(opt)">{{ optLabel(opt) }}</option>
+          </select>
+          <input v-else-if="field.type === 'number'" type="number" class="rabbits-prop-input" :value="node[field.name]" @change="update(field.name, parseFloat($event.target.value) || 0)" />
+          <input v-else type="text" class="rabbits-prop-input" :value="node[field.name]" @change="update(field.name, $event.target.value)" />
+        </template>
+      </div>
+    </div>
+
     <!-- CSS Classes -->
     <div class="rabbits-prop-group">
       <label class="rabbits-prop-label">Classes</label>
@@ -354,6 +372,7 @@ export default {
     breakpoint: { type: String, default: 'default' },
     presets: { type: Object, default: () => ({}) },
     triggers: { type: Object, default: () => ({}) },
+    componentTypes: { type: Object, default: () => ({}) },
   },
 
   emits: ['update', 'add-child'],
@@ -413,6 +432,10 @@ export default {
     currentStyles() {
       const bpKey = this.breakpoint === 'desktop' ? 'default' : this.breakpoint;
       return this.node.styles?.[bpKey] || {};
+    },
+
+    customFields() {
+      return this.componentTypes[this.node.type]?.fields || [];
     },
 
     hasAnimation() { return !!this.node.animations; },
@@ -479,6 +502,9 @@ export default {
     updateClasses(value) {
       this.$emit('update', this.node.id, { classes: value.split(/\s+/).filter(Boolean) });
     },
+
+    optValue(opt) { return typeof opt === 'object' && opt !== null ? opt.value : opt; },
+    optLabel(opt) { return typeof opt === 'object' && opt !== null ? (opt.label ?? opt.value) : opt; },
 
     updateAttr(i, key, value) {
       const attributes = (this.node.attributes || []).map((a, idx) => idx === i ? { ...a, [key]: value } : a);

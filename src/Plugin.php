@@ -16,6 +16,7 @@ use justinholtweb\rabbits\elements\Component;
 use justinholtweb\rabbits\models\Settings;
 use justinholtweb\rabbits\services\AnimationManager;
 use justinholtweb\rabbits\services\Builder;
+use justinholtweb\rabbits\services\ComponentTypes;
 use justinholtweb\rabbits\services\Components;
 use justinholtweb\rabbits\services\Renderer;
 use justinholtweb\rabbits\services\Runtime;
@@ -36,6 +37,7 @@ use yii\base\Event;
  * @property-read ThemeBridge $themes
  * @property-read Renderer $renderer
  * @property-read Runtime $runtime
+ * @property-read ComponentTypes $componentTypes
  * @method Settings getSettings()
  */
 class Plugin extends BasePlugin
@@ -56,6 +58,7 @@ class Plugin extends BasePlugin
                 'themes' => ThemeBridge::class,
                 'renderer' => Renderer::class,
                 'runtime' => Runtime::class,
+                'componentTypes' => ComponentTypes::class,
             ],
         ];
     }
@@ -72,9 +75,9 @@ class Plugin extends BasePlugin
             $this->_registerCpUrlRules();
         }
 
-        if (Craft::$app->getEdition() === Craft::Pro) {
-            $this->_registerPermissions();
-        }
+        // Register permissions on every edition; Craft only surfaces the
+        // permission UI on editions that support it (Team and Pro).
+        $this->_registerPermissions();
 
         Craft::info('Rabbits plugin loaded', __METHOD__);
     }

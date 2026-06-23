@@ -90,6 +90,7 @@
             :breakpoint="activeBreakpoint"
             :presets="animationPresets"
             :triggers="animationTriggers"
+            :component-types="componentTypes"
             @update="onUpdateNode"
             @add-child="onAddChild"
           />
@@ -130,6 +131,7 @@ export default {
       atomPalette: [],
       animationPresets: {},
       animationTriggers: {},
+      componentTypes: {},
       breakpoints: [
         { key: 'desktop', label: 'Desktop', icon: '🖥', width: '100%' },
         { key: 'tablet', label: 'Tablet', icon: '📱', width: '768px' },
@@ -186,6 +188,7 @@ export default {
         this.atomPalette = paletteRes.atoms || [];
         this.animationPresets = paletteRes.animationPresets || {};
         this.animationTriggers = paletteRes.animationTriggers || {};
+        this.componentTypes = paletteRes.componentTypes || {};
       } catch (err) {
         console.error('Failed to load builder data:', err);
       }
